@@ -1,6 +1,7 @@
 package com.vegam.budgetcalculator.presentation.expense.add
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -33,7 +34,9 @@ fun AddExpenseScreen(
     var amount by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf<String?>(null) }
+    var selectedSubCategoryId by remember { mutableStateOf<String?>(null) }
     val categories by viewModel.categories.collectAsState()
+    val subCategories by viewModel.subCategories.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
@@ -116,7 +119,11 @@ fun AddExpenseScreen(
                 items(categories) { category ->
                     val isSelected = selectedCategoryId == category.id
                     Card(
-                        onClick = { selectedCategoryId = category.id },
+                        onClick = {
+                            selectedCategoryId = category.id
+                            selectedSubCategoryId = null
+                            viewModel.selectCategory(category.id)
+                        },
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) Color(category.color).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
                         ),
@@ -145,6 +152,34 @@ fun AddExpenseScreen(
                 }
             }
 
+            if (subCategories.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Subcategory (Optional)",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    subCategories.forEach { subCategory ->
+                        FilterChip(
+                            selected = selectedSubCategoryId == subCategory.id,
+                            onClick = {
+                                selectedSubCategoryId = if (selectedSubCategoryId == subCategory.id) null else subCategory.id
+                            },
+                            label = { Text("${subCategory.icon} ${subCategory.name}") },
+                            leadingIcon = if (selectedSubCategoryId == subCategory.id) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                            } else null
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             BudgetTextField(
@@ -167,7 +202,7 @@ fun AddExpenseScreen(
                 text = "Save Expense",
                 onClick = {
                     selectedCategoryId?.let { catId ->
-                        viewModel.addExpense(amount, catId, null, notes, System.currentTimeMillis())
+                        viewModel.addExpense(amount, catId, selectedSubCategoryId, notes, System.currentTimeMillis())
                     }
                 },
                 isLoading = uiState is AddExpenseUiState.Loading,

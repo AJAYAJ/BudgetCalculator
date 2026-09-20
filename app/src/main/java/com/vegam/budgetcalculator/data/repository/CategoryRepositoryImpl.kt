@@ -20,6 +20,9 @@ class CategoryRepositoryImpl @Inject constructor(
         return categoryDao.observeCategories(userId).map { list -> list.map { it.toDomain() } }
     }
 
+    override suspend fun hasCategories(userId: String): Boolean =
+        categoryDao.getCategoryCount(userId) > 0
+
     override suspend fun addCategory(category: Category) {
         categoryDao.insertCategory(category.toEntity())
     }
@@ -46,5 +49,13 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun addSubCategories(subCategories: List<SubCategory>) {
         categoryDao.insertSubCategories(subCategories.map { it.toEntity() })
+    }
+
+    override suspend fun updateSubCategory(subCategory: SubCategory) {
+        categoryDao.updateSubCategory(subCategory.toEntity())
+    }
+
+    override suspend fun deleteSubCategory(subCategory: SubCategory) {
+        categoryDao.deleteSubCategory(subCategory.toEntity())
     }
 }

@@ -10,6 +10,8 @@ class CreateDefaultCategoriesUseCase @Inject constructor(
     private val repository: CategoryRepository
 ) {
     suspend operator fun invoke(userId: String) {
+        if (repository.hasCategories(userId)) return
+
         val defaults = listOf(
             "Home Needs" to listOf("Vegetables", "Groceries", "Cleaning", "Milk", "Household Products"),
             "Groceries" to emptyList(),
@@ -43,6 +45,11 @@ class CreateDefaultCategoriesUseCase @Inject constructor(
         val categoriesToInsert = mutableListOf<Category>()
         val subCategoriesToInsert = mutableListOf<SubCategory>()
 
+        val icons = listOf(
+            "🏠", "🛒", "🥬", "⛽", "💧", "⚡", "👤", "🏥", "💳",
+            "🔑", "🍽️", "✈️", "🛍️", "🎓", "🎬", "🏦", "🛡️", "📦"
+        )
+
         defaults.forEachIndexed { index, pair ->
             val categoryId = UUID.randomUUID().toString()
             val color = colors[index % colors.size]
@@ -51,7 +58,7 @@ class CreateDefaultCategoriesUseCase @Inject constructor(
                     id = categoryId,
                     userId = userId,
                     name = pair.first,
-                    icon = pair.first.replace(" ", ""),
+                    icon = icons[index],
                     color = color,
                     isDefault = true,
                     createdAt = System.currentTimeMillis(),
@@ -65,7 +72,7 @@ class CreateDefaultCategoriesUseCase @Inject constructor(
                         id = UUID.randomUUID().toString(),
                         categoryId = categoryId,
                         name = subName,
-                        icon = subName.replace(" ", ""),
+                        icon = "•",
                         createdAt = System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis()
                     )

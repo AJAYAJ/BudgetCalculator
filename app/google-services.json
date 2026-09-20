@@ -1,12 +1,13 @@
 {
   "project_info": {
-    "project_number": "1234567890",
-    "project_id": "budgetcalculator-dummy"
+    "project_number": "170963503987",
+    "project_id": "budget-calculator-76407",
+    "storage_bucket": "budget-calculator-76407.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+        "mobilesdk_app_id": "1:170963503987:android:e20ff728b6a17b8e589306",
         "android_client_info": {
           "package_name": "com.vegam.budgetcalculator"
         }
@@ -14,15 +15,15 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "dummy_api_key"
+          "current_key": "AIzaSyBNQkwGtFSB0ESZm_HWryfraM4syzm4Ofk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "status": 1
+          "other_platform_oauth_client": []
         }
       }
     }
   ],
-  "configuration_version": "3"
+  "configuration_version": "1"
 }

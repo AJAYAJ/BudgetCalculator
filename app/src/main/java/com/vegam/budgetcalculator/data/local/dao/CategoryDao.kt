@@ -12,8 +12,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories WHERE userId = :userId OR isDefault = 1 ORDER BY name ASC")
+    @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name ASC")
     fun observeCategories(userId: String): Flow<List<CategoryEntity>>
+
+    @Query("SELECT COUNT(*) FROM categories WHERE userId = :userId")
+    suspend fun getCategoryCount(userId: String): Int
 
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getCategoryById(id: String): CategoryEntity?
@@ -39,4 +42,10 @@ interface CategoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubCategories(subCategories: List<SubCategoryEntity>)
+
+    @Update
+    suspend fun updateSubCategory(subCategory: SubCategoryEntity)
+
+    @Delete
+    suspend fun deleteSubCategory(subCategory: SubCategoryEntity)
 }

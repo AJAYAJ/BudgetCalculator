@@ -1,6 +1,9 @@
 package com.vegam.budgetcalculator.presentation.main
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,10 +17,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vegam.budgetcalculator.presentation.navigation.Screen
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.vegam.budgetcalculator.presentation.MainViewModel
 
 @Composable
 fun MainScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -89,13 +97,42 @@ fun MainScreen(
                 com.vegam.budgetcalculator.presentation.analytics.AnalyticsScreen()
             }
             composable(Screen.More.route) {
-                Column {
-                    Text("More Settings")
-                    Button(onClick = onLogout) {
-                        Text("Logout")
-                    }
-                }
+                MoreScreen(
+                    onManageCategories = { navController.navigate(Screen.ManageCategories.route) },
+                    onLogout = onLogout
+                )
             }
+            composable(Screen.ManageCategories.route) {
+                com.vegam.budgetcalculator.presentation.category.ManageCategoriesScreen(
+                    onBackPressed = { navController.popBackStack() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoreScreen(
+    onManageCategories: () -> Unit,
+    onLogout: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text("More", style = MaterialTheme.typography.headlineMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Card(onClick = onManageCategories, modifier = Modifier.fillMaxWidth()) {
+            ListItem(
+                headlineContent = { Text("Manage Categories") },
+                supportingContent = { Text("Create and edit categories, icons, colors and subcategories") },
+                leadingContent = { Icon(Icons.Default.Category, contentDescription = null) },
+                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) }
+            )
+        }
+        OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Logout, contentDescription = null)
+            Text("  Logout")
         }
     }
 }

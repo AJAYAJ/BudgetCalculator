@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vegam.budgetcalculator.domain.model.Category
 import com.vegam.budgetcalculator.domain.model.Expense
+import com.vegam.budgetcalculator.domain.model.SubCategory
 import com.vegam.budgetcalculator.domain.repository.AuthRepository
 import com.vegam.budgetcalculator.domain.repository.CategoryRepository
 import com.vegam.budgetcalculator.domain.usecase.expense.AddExpenseUseCase
@@ -30,6 +31,18 @@ class AddExpenseViewModel @Inject constructor(
             if (user == null) flowOf(emptyList())
             else categoryRepository.observeCategories(user.id)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val selectedCategoryId = MutableStateFlow<String?>(null)
+
+    val subCategories: StateFlow<List<SubCategory>> = selectedCategoryId
+        .flatMapLatest { categoryId ->
+            if (categoryId == null) flowOf(emptyList())
+            else categoryRepository.observeSubCategories(categoryId)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun selectCategory(categoryId: String) {
+        selectedCategoryId.value = categoryId
+    }
 
     fun addExpense(
         amount: String,
