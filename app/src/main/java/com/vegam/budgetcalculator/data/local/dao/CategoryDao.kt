@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Transaction
 import com.vegam.budgetcalculator.data.local.entity.CategoryEntity
 import com.vegam.budgetcalculator.data.local.entity.SubCategoryEntity
 import kotlinx.coroutines.flow.Flow
@@ -48,4 +49,32 @@ interface CategoryDao {
 
     @Delete
     suspend fun deleteSubCategory(subCategory: SubCategoryEntity)
+
+    @Query("SELECT COUNT(*) FROM expenses WHERE categoryId = :categoryId")
+    suspend fun getExpenseCountForCategory(categoryId: String): Int
+
+    @Query("SELECT COUNT(*) FROM expenses WHERE subCategoryId = :subCategoryId")
+    suspend fun getExpenseCountForSubCategory(subCategoryId: String): Int
+
+    @Query("DELETE FROM expenses WHERE categoryId = :categoryId")
+    suspend fun deleteExpensesForCategory(categoryId: String)
+
+    @Query("DELETE FROM expenses WHERE subCategoryId = :subCategoryId")
+    suspend fun deleteExpensesForSubCategory(subCategoryId: String)
+
+    @Query("DELETE FROM subcategories WHERE categoryId = :categoryId")
+    suspend fun deleteSubCategoriesForCategory(categoryId: String)
+
+    @Transaction
+    suspend fun deleteCategoryAndExpenses(category: CategoryEntity) {
+        deleteExpensesForCategory(category.id)
+        deleteSubCategoriesForCategory(category.id)
+        deleteCategory(category)
+    }
+
+    @Transaction
+    suspend fun deleteSubCategoryAndExpenses(subCategory: SubCategoryEntity) {
+        deleteExpensesForSubCategory(subCategory.id)
+        deleteSubCategory(subCategory)
+    }
 }

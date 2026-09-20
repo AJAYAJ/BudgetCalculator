@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -24,6 +26,9 @@ class ManageCategoriesViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
+
+    private val _deleteRequest = MutableStateFlow<CategoryDeleteRequest?>(null)
+    val deleteRequest = _deleteRequest.asStateFlow()
 
     val categories: StateFlow<List<Category>> = authRepository.currentUserFlow
         .flatMapLatest { user ->
@@ -98,4 +103,48 @@ class ManageCategoriesViewModel @Inject constructor(
             }
         }
     }
+
+    fun requestDeleteCategory(category: Category) {
+        viewModelScope.launch {
+            val expenseCount = categoryRepository.getExpenseCountForCategory(category.id)
+            if (expenseCount == 0) {
+                categoryRepository.deleteCategoryAndExpenses(category)
+            } else {
+                _deleteRequest.value = CategoryDeleteRequest.CategoryRequest(category, expenseCount)
+            }
+        }
+    }
+
+    fun requestDeleteSubCategory(subCategory: SubCategory) {
+        viewModelScope.launch {
+            val expenseCount = categoryRepository.getExpenseCountForSubCategory(subCategory.id)
+            if (expenseCount == 0) {
+                categoryRepository.deleteSubCategoryAndExpenses(subCategory)
+            } else {
+                _deleteRequest.value = CategoryDeleteRequest.SubCategoryRequest(subCategory, expenseCount)
+            }
+        }
+    }
+
+    fun confirmDelete() {
+        val request = _deleteRequest.value ?: return
+        viewModelScope.launch {
+            when (request) {
+                is CategoryDeleteRequest.CategoryRequest -> categoryRepository.deleteCategoryAndExpenses(request.category)
+                is CategoryDeleteRequest.SubCategoryRequest -> categoryRepository.deleteSubCategoryAndExpenses(request.subCategory)
+            }
+            _deleteRequest.value = null
+        }
+    }
+
+    fun dismissDeleteRequest() {
+        _deleteRequest.value = null
+    }
+}
+
+sealed interface CategoryDeleteRequest {
+    val expenseCount: Int
+
+    data class CategoryRequest(val category: Category, override val expenseCount: Int) : CategoryDeleteRequest
+    data class SubCategoryRequest(val subCategory: SubCategory, override val expenseCount: Int) : CategoryDeleteRequest
 }

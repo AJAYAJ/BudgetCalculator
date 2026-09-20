@@ -11,6 +11,8 @@ interface CategoryRepository {
     suspend fun addCategories(categories: List<Category>)
     suspend fun updateCategory(category: Category)
     suspend fun deleteCategory(category: Category)
+    suspend fun getExpenseCountForCategory(categoryId: String): Int
+    suspend fun deleteCategoryAndExpenses(category: Category)
     
     // Subcategories
     fun observeSubCategories(categoryId: String): Flow<List<SubCategory>>
@@ -18,4 +20,6 @@ interface CategoryRepository {
     suspend fun addSubCategories(subCategories: List<SubCategory>)
     suspend fun updateSubCategory(subCategory: SubCategory)
     suspend fun deleteSubCategory(subCategory: SubCategory)
+    suspend fun getExpenseCountForSubCategory(subCategoryId: String): Int
+    suspend fun deleteSubCategoryAndExpenses(subCategory: SubCategory)
 }

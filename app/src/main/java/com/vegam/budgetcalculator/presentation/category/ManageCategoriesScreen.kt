@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.AlertDialog
@@ -33,6 +34,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -69,6 +71,7 @@ fun ManageCategoriesScreen(
 ) {
     val categories by viewModel.categories.collectAsState()
     val subCategories by viewModel.subCategories.collectAsState()
+    val deleteRequest by viewModel.deleteRequest.collectAsState()
     var editingCategory by remember { mutableStateOf<Category?>(null) }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var subCategoryTarget by remember { mutableStateOf<Category?>(null) }
@@ -132,6 +135,13 @@ fun ManageCategoriesScreen(
                                 editingCategory = category
                                 showCategoryDialog = true
                             }) { Icon(Icons.Default.Edit, contentDescription = "Edit ${category.name}") }
+                            IconButton(onClick = { viewModel.requestDeleteCategory(category) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete ${category.name}",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                             Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
                         }
                         if (expanded) {
@@ -147,6 +157,13 @@ fun ManageCategoriesScreen(
                                         subCategoryTarget = category
                                         editingSubCategory = subCategory
                                     }) { Icon(Icons.Default.Edit, contentDescription = "Edit ${subCategory.name}") }
+                                    IconButton(onClick = { viewModel.requestDeleteSubCategory(subCategory) }) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Delete ${subCategory.name}",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
                             }
                             TextButton(
@@ -193,6 +210,35 @@ fun ManageCategoriesScreen(
                 expandedIds = expandedIds + category.id
             }
         )
+    }
+
+    deleteRequest?.let { request ->
+        val itemName = when (request) {
+            is CategoryDeleteRequest.CategoryRequest -> request.category.name
+            is CategoryDeleteRequest.SubCategoryRequest -> request.subCategory.name
+        }
+        val itemType = if (request is CategoryDeleteRequest.CategoryRequest) "category" else "subcategory"
+        ModalBottomSheet(onDismissRequest = viewModel::dismissDeleteRequest) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Expenses already exist", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    "${request.expenseCount} expense${if (request.expenseCount == 1) " is" else "s are"} linked to “$itemName”. " +
+                        "Deleting this $itemType will also permanently delete ${if (request.expenseCount == 1) "that expense" else "those expenses"}."
+                )
+                Button(
+                    onClick = viewModel::confirmDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Delete $itemType and expenses") }
+                OutlinedButton(onClick = viewModel::dismissDeleteRequest, modifier = Modifier.fillMaxWidth()) {
+                    Text("Cancel")
+                }
+                Spacer(Modifier.size(16.dp))
+            }
+        }
     }
 }
 

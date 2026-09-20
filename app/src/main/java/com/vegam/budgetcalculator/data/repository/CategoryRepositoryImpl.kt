@@ -39,6 +39,13 @@ class CategoryRepositoryImpl @Inject constructor(
         categoryDao.deleteCategory(category.toEntity())
     }
 
+    override suspend fun getExpenseCountForCategory(categoryId: String): Int =
+        categoryDao.getExpenseCountForCategory(categoryId)
+
+    override suspend fun deleteCategoryAndExpenses(category: Category) {
+        categoryDao.deleteCategoryAndExpenses(category.toEntity())
+    }
+
     override fun observeSubCategories(categoryId: String): Flow<List<SubCategory>> {
         return categoryDao.observeSubCategories(categoryId).map { list -> list.map { it.toDomain() } }
     }
@@ -57,5 +64,12 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun deleteSubCategory(subCategory: SubCategory) {
         categoryDao.deleteSubCategory(subCategory.toEntity())
+    }
+
+    override suspend fun getExpenseCountForSubCategory(subCategoryId: String): Int =
+        categoryDao.getExpenseCountForSubCategory(subCategoryId)
+
+    override suspend fun deleteSubCategoryAndExpenses(subCategory: SubCategory) {
+        categoryDao.deleteSubCategoryAndExpenses(subCategory.toEntity())
     }
 }
