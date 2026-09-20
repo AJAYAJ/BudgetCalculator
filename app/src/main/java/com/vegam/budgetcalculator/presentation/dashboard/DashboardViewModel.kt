@@ -14,6 +14,7 @@ import com.vegam.budgetcalculator.domain.usecase.budget.MonthlySummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -69,6 +70,12 @@ class DashboardViewModel @Inject constructor(
 
     fun previousMonth() {
         _selectedMonth.value = _selectedMonth.value.minusMonths(1)
+    }
+
+    fun deleteExpense(expenseId: String) {
+        viewModelScope.launch {
+            expenseRepository.deleteExpense(expenseId)
+        }
     }
 }
 

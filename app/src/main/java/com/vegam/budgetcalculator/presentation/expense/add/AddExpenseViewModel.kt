@@ -7,6 +7,7 @@ import com.vegam.budgetcalculator.domain.model.Expense
 import com.vegam.budgetcalculator.domain.model.SubCategory
 import com.vegam.budgetcalculator.domain.repository.AuthRepository
 import com.vegam.budgetcalculator.domain.repository.CategoryRepository
+import com.vegam.budgetcalculator.domain.repository.ExpenseRepository
 import com.vegam.budgetcalculator.domain.usecase.expense.AddExpenseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,11 +21,15 @@ import javax.inject.Inject
 class AddExpenseViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val categoryRepository: CategoryRepository,
+    private val expenseRepository: ExpenseRepository,
     private val addExpenseUseCase: AddExpenseUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddExpenseUiState>(AddExpenseUiState.Idle)
     val uiState = _uiState.asStateFlow()
+
+    private val _editingExpense = MutableStateFlow<Expense?>(null)
+    val editingExpense = _editingExpense.asStateFlow()
 
     val categories: StateFlow<List<Category>> = authRepository.currentUserFlow
         .flatMapLatest { user ->
@@ -44,6 +49,13 @@ class AddExpenseViewModel @Inject constructor(
         selectedCategoryId.value = categoryId
     }
 
+    fun loadExpense(expenseId: String) {
+        if (_editingExpense.value?.id == expenseId) return
+        viewModelScope.launch {
+            _editingExpense.value = expenseRepository.getExpenseById(expenseId)
+        }
+    }
+
     fun addExpense(
         amount: String,
         categoryId: String,
@@ -60,21 +72,29 @@ class AddExpenseViewModel @Inject constructor(
 
         val userId = authRepository.getCurrentUserId() ?: return
 
+        val existing = _editingExpense.value
+        val resolvedNotes = notes.trim().ifBlank {
+            categories.value.firstOrNull { it.id == categoryId }?.name ?: "Expense"
+        }
         val expense = Expense(
-            id = UUID.randomUUID().toString(),
-            userId = userId,
+            id = existing?.id ?: UUID.randomUUID().toString(),
+            userId = existing?.userId ?: userId,
             categoryId = categoryId,
             subCategoryId = subCategoryId,
             amountMinor = amountMinor,
-            notes = notes,
+            notes = resolvedNotes,
             dateTime = timestamp,
-            createdAt = System.currentTimeMillis(),
+            createdAt = existing?.createdAt ?: System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
 
         viewModelScope.launch {
             _uiState.value = AddExpenseUiState.Loading
-            val result = addExpenseUseCase(expense)
+            val result = if (existing == null) {
+                addExpenseUseCase(expense)
+            } else {
+                runCatching { expenseRepository.updateExpense(expense) }
+            }
             if (result.isSuccess) {
                 _uiState.value = AddExpenseUiState.Success
             } else {

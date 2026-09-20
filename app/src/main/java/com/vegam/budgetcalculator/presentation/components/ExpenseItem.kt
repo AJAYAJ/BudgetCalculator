@@ -1,6 +1,7 @@
 package com.vegam.budgetcalculator.presentation.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,12 +21,11 @@ fun ExpenseItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val date = Instant.ofEpochMilli(expense.dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
     val formatter = DateTimeFormatter.ofPattern("dd MMM, hh:mm a")
     val timeStr = Instant.ofEpochMilli(expense.dateTime).atZone(ZoneId.systemDefault()).format(formatter)
 
     ListItem(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         headlineContent = {
             Text(
                 text = expense.notes ?: categoryName,

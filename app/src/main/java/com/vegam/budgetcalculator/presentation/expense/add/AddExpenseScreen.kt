@@ -29,6 +29,7 @@ import com.vegam.budgetcalculator.presentation.components.BudgetTextField
 fun AddExpenseScreen(
     onBackPressed: () -> Unit,
     onExpenseAdded: () -> Unit,
+    expenseId: String? = null,
     viewModel: AddExpenseViewModel = hiltViewModel()
 ) {
     var amount by remember { mutableStateOf("") }
@@ -38,6 +39,21 @@ fun AddExpenseScreen(
     val categories by viewModel.categories.collectAsState()
     val subCategories by viewModel.subCategories.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val editingExpense by viewModel.editingExpense.collectAsState()
+
+    LaunchedEffect(expenseId) {
+        expenseId?.let(viewModel::loadExpense)
+    }
+
+    LaunchedEffect(editingExpense?.id) {
+        editingExpense?.let { expense ->
+            amount = (expense.amountMinor / 100.0).toString().removeSuffix(".0")
+            notes = expense.notes.orEmpty()
+            selectedCategoryId = expense.categoryId
+            selectedSubCategoryId = expense.subCategoryId
+            viewModel.selectCategory(expense.categoryId)
+        }
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is AddExpenseUiState.Success) {
@@ -48,7 +64,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Expense") },
+                title = { Text(if (expenseId == null) "Add Expense" else "Edit Expense") },
                 navigationIcon = {
                     IconButton(onClick = onBackPressed) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -199,10 +215,16 @@ fun AddExpenseScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             BudgetButton(
-                text = "Save Expense",
+                text = if (expenseId == null) "Save Expense" else "Update Expense",
                 onClick = {
                     selectedCategoryId?.let { catId ->
-                        viewModel.addExpense(amount, catId, selectedSubCategoryId, notes, System.currentTimeMillis())
+                        viewModel.addExpense(
+                            amount,
+                            catId,
+                            selectedSubCategoryId,
+                            notes,
+                            editingExpense?.dateTime ?: System.currentTimeMillis()
+                        )
                     }
                 },
                 isLoading = uiState is AddExpenseUiState.Loading,

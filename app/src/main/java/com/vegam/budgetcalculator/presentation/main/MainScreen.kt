@@ -72,16 +72,17 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
+        println(innerPadding)
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding()
         ) {
             composable(Screen.Dashboard.route) {
                 com.vegam.budgetcalculator.presentation.dashboard.DashboardScreen(
                     onAddExpenseClick = { navController.navigate(Screen.AddExpense.route) },
-                    onCategoryClick = { /* TODO */ },
-                    onExpenseClick = { /* TODO */ }
+                    onSummaryClick = { navController.navigate(Screen.CategoryBudgets.route) },
+                    onExpenseClick = { expenseId -> navController.navigate(Screen.EditExpense.createRoute(expenseId)) }
                 )
             }
             composable(Screen.Calendar.route) {
@@ -91,6 +92,19 @@ fun MainScreen(
                 com.vegam.budgetcalculator.presentation.expense.add.AddExpenseScreen(
                     onBackPressed = { navController.popBackStack() },
                     onExpenseAdded = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.EditExpense.route) { entry ->
+                com.vegam.budgetcalculator.presentation.expense.add.AddExpenseScreen(
+                    expenseId = entry.arguments?.getString("expenseId"),
+                    onBackPressed = { navController.popBackStack() },
+                    onExpenseAdded = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.CategoryBudgets.route) {
+                com.vegam.budgetcalculator.presentation.dashboard.CategoryBudgetsScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    onCategoryClick = { /* Category budget editing can be added here. */ }
                 )
             }
             composable(Screen.Analytics.route) {
