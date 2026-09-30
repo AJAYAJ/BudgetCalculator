@@ -4,10 +4,12 @@ import com.vegam.budgetcalculator.data.repository.AuthRepositoryImpl
 import com.vegam.budgetcalculator.data.repository.BudgetRepositoryImpl
 import com.vegam.budgetcalculator.data.repository.CategoryRepositoryImpl
 import com.vegam.budgetcalculator.data.repository.ExpenseRepositoryImpl
+import com.vegam.budgetcalculator.data.repository.LoanRepositoryImpl
 import com.vegam.budgetcalculator.domain.repository.AuthRepository
 import com.vegam.budgetcalculator.domain.repository.BudgetRepository
 import com.vegam.budgetcalculator.domain.repository.CategoryRepository
 import com.vegam.budgetcalculator.domain.repository.ExpenseRepository
+import com.vegam.budgetcalculator.domain.repository.LoanRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindBudgetRepository(
         impl: BudgetRepositoryImpl
     ): BudgetRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLoanRepository(
+        impl: LoanRepositoryImpl
+    ): LoanRepository
 }

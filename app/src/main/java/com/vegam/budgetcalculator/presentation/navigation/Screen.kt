@@ -13,6 +13,10 @@ sealed class Screen(val route: String) {
     }
     data object Analytics : Screen("analytics")
     data object More : Screen("more")
+    data object Loans : Screen("loans")
+    data object LoanDetails : Screen("loan_details/{personId}") {
+        fun createRoute(personId: String) = "loan_details/$personId"
+    }
     
     data object ManageCategories : Screen("manage_categories")
     data object CategoryBudgets : Screen("category_budgets")

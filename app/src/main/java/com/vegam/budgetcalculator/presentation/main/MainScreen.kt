@@ -30,6 +30,10 @@ fun MainScreen(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val showBottomNavigation = currentDestination?.route !in setOf(
+        Screen.Loans.route,
+        Screen.LoanDetails.route
+    )
 
     val items = listOf(
         Screen.Dashboard,
@@ -41,33 +45,35 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                items.forEach { screen ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                    NavigationBarItem(
-                        icon = {
-                            val icon = when (screen) {
-                                Screen.Dashboard -> Icons.Default.Dashboard
-                                Screen.Calendar -> Icons.Default.CalendarMonth
-                                Screen.AddExpense -> Icons.Default.AddCircle
-                                Screen.Analytics -> Icons.Default.PieChart
-                                Screen.More -> Icons.Default.Menu
-                                else -> Icons.Default.Home
-                            }
-                            Icon(icon, contentDescription = screen.route)
-                        },
-                        label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
-                        selected = isSelected,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomNavigation) {
+                NavigationBar {
+                    items.forEach { screen ->
+                        val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                        NavigationBarItem(
+                            icon = {
+                                val icon = when (screen) {
+                                    Screen.Dashboard -> Icons.Default.Dashboard
+                                    Screen.Calendar -> Icons.Default.CalendarMonth
+                                    Screen.AddExpense -> Icons.Default.AddCircle
+                                    Screen.Analytics -> Icons.Default.PieChart
+                                    Screen.More -> Icons.Default.Menu
+                                    else -> Icons.Default.Home
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                                Icon(icon, contentDescription = screen.route)
+                            },
+                            label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
+                            selected = isSelected,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -120,7 +126,20 @@ fun MainScreen(
             composable(Screen.More.route) {
                 MoreScreen(
                     onManageCategories = { navController.navigate(Screen.ManageCategories.route) },
+                    onLoans = { navController.navigate(Screen.Loans.route) },
                     onLogout = onLogout
+                )
+            }
+            composable(Screen.Loans.route) {
+                com.vegam.budgetcalculator.presentation.loans.LoansScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    onPersonClick = { personId -> navController.navigate(Screen.LoanDetails.createRoute(personId)) }
+                )
+            }
+            composable(Screen.LoanDetails.route) { entry ->
+                com.vegam.budgetcalculator.presentation.loans.LoanDetailsScreen(
+                    personId = entry.arguments?.getString("personId").orEmpty(),
+                    onBackPressed = { navController.popBackStack() }
                 )
             }
             composable(Screen.ManageCategories.route) {
@@ -135,6 +154,7 @@ fun MainScreen(
 @Composable
 private fun MoreScreen(
     onManageCategories: () -> Unit,
+    onLoans: () -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
@@ -148,6 +168,14 @@ private fun MoreScreen(
                 headlineContent = { Text("Manage Categories") },
                 supportingContent = { Text("Create and edit categories, icons, colors and subcategories") },
                 leadingContent = { Icon(Icons.Default.Category, contentDescription = null) },
+                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) }
+            )
+        }
+        Card(onClick = onLoans, modifier = Modifier.fillMaxWidth()) {
+            ListItem(
+                headlineContent = { Text("Loans") },
+                supportingContent = { Text("Track money given, returned and interest by person") },
+                leadingContent = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null) },
                 trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) }
             )
         }
