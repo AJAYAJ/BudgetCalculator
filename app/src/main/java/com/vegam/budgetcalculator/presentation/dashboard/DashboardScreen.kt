@@ -256,6 +256,19 @@ private fun DashboardScreenPreview() {
                 CategorySpending(groceries, 15_000_00, 8_200_00, 6_800_00, 54.7f),
                 CategorySpending(travel, 10_000_00, 3_500_00, 6_500_00, 35f)
             ),
+            allExpenses = listOf(
+                Expense(
+                    id = "expense-1",
+                    userId = "preview-user",
+                    categoryId = groceries.id,
+                    subCategoryId = null,
+                    amountMinor = 1_250_00,
+                    notes = "Weekly groceries",
+                    dateTime = now,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            ),
             recentExpenses = listOf(
                 Expense(
                     id = "expense-1",

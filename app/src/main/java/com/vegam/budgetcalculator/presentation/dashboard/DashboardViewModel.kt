@@ -58,6 +58,7 @@ class DashboardViewModel @Inject constructor(
                     month = month,
                     summary = summary,
                     categorySpending = categorySpending,
+                    allExpenses = expenses,
                     recentExpenses = expenses.take(10)
                 )
             )
@@ -89,5 +90,6 @@ data class DashboardData(
     val month: YearMonth,
     val summary: MonthlySummary,
     val categorySpending: List<CategorySpending>,
+    val allExpenses: List<Expense>,
     val recentExpenses: List<Expense>
 )

@@ -104,7 +104,14 @@ fun MainScreen(
             composable(Screen.CategoryBudgets.route) {
                 com.vegam.budgetcalculator.presentation.dashboard.CategoryBudgetsScreen(
                     onBackPressed = { navController.popBackStack() },
-                    onCategoryClick = { /* Category budget editing can be added here. */ }
+                    onCategoryClick = { categoryId -> navController.navigate(Screen.CategoryExpenses.createRoute(categoryId)) }
+                )
+            }
+            composable(Screen.CategoryExpenses.route) { entry ->
+                com.vegam.budgetcalculator.presentation.dashboard.CategoryExpensesScreen(
+                    categoryId = entry.arguments?.getString("categoryId").orEmpty(),
+                    onBackPressed = { navController.popBackStack() },
+                    onExpenseClick = { expenseId -> navController.navigate(Screen.EditExpense.createRoute(expenseId)) }
                 )
             }
             composable(Screen.Analytics.route) {
