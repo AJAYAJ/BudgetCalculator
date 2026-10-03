@@ -21,5 +21,5 @@ data class LoanTransaction(
     val createdAt: Long
 ) {
     val signedAmountMinor: Long
-        get() = if (type == LoanTransactionType.GIVEN) -amountMinor else amountMinor
+        get() = if (type == LoanTransactionType.GIVEN) - amountMinor else amountMinor
 }

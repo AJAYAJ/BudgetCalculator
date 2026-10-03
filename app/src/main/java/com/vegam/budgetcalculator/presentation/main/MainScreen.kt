@@ -78,11 +78,10 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        println(innerPadding)
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding()
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             composable(Screen.Dashboard.route) {
                 com.vegam.budgetcalculator.presentation.dashboard.DashboardScreen(

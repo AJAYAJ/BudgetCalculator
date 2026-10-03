@@ -18,11 +18,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vegam.budgetcalculator.domain.model.Category
+import com.vegam.budgetcalculator.domain.model.Expense
+import com.vegam.budgetcalculator.domain.model.SubCategory
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vegam.budgetcalculator.presentation.components.BudgetButton
 import com.vegam.budgetcalculator.presentation.components.BudgetTextField
+import com.vegam.budgetcalculator.ui.theme.BudgetCalculatorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,10 +37,6 @@ fun AddExpenseScreen(
     expenseId: String? = null,
     viewModel: AddExpenseViewModel = hiltViewModel()
 ) {
-    var amount by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var selectedCategoryId by remember { mutableStateOf<String?>(null) }
-    var selectedSubCategoryId by remember { mutableStateOf<String?>(null) }
     val categories by viewModel.categories.collectAsState()
     val subCategories by viewModel.subCategories.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
@@ -45,19 +46,56 @@ fun AddExpenseScreen(
         expenseId?.let(viewModel::loadExpense)
     }
 
+    LaunchedEffect(uiState) {
+        if (uiState is AddExpenseUiState.Success) {
+            onExpenseAdded()
+        }
+    }
+
+    AddExpenseContent(
+        expenseId = expenseId,
+        categories = categories,
+        subCategories = subCategories,
+        uiState = uiState,
+        editingExpense = editingExpense,
+        onBackPressed = onBackPressed,
+        onCategorySelected = viewModel::selectCategory,
+        onSaveExpense = { amount, categoryId, subCategoryId, notes ->
+            viewModel.addExpense(
+                amount,
+                categoryId,
+                subCategoryId,
+                notes,
+                editingExpense?.dateTime ?: System.currentTimeMillis()
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddExpenseContent(
+    expenseId: String?,
+    categories: List<Category>,
+    subCategories: List<SubCategory>,
+    uiState: AddExpenseUiState,
+    editingExpense: Expense? = null,
+    onBackPressed: () -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onSaveExpense: (String, String, String?, String) -> Unit
+) {
+    var amount by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var selectedCategoryId by remember { mutableStateOf<String?>(null) }
+    var selectedSubCategoryId by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(editingExpense?.id) {
         editingExpense?.let { expense ->
             amount = (expense.amountMinor / 100.0).toString().removeSuffix(".0")
             notes = expense.notes.orEmpty()
             selectedCategoryId = expense.categoryId
             selectedSubCategoryId = expense.subCategoryId
-            viewModel.selectCategory(expense.categoryId)
-        }
-    }
-
-    LaunchedEffect(uiState) {
-        if (uiState is AddExpenseUiState.Success) {
-            onExpenseAdded()
+            onCategorySelected(expense.categoryId)
         }
     }
 
@@ -138,7 +176,7 @@ fun AddExpenseScreen(
                         onClick = {
                             selectedCategoryId = category.id
                             selectedSubCategoryId = null
-                            viewModel.selectCategory(category.id)
+                            onCategorySelected(category.id)
                         },
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) Color(category.color).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
@@ -218,18 +256,44 @@ fun AddExpenseScreen(
                 text = if (expenseId == null) "Save Expense" else "Update Expense",
                 onClick = {
                     selectedCategoryId?.let { catId ->
-                        viewModel.addExpense(
-                            amount,
-                            catId,
-                            selectedSubCategoryId,
-                            notes,
-                            editingExpense?.dateTime ?: System.currentTimeMillis()
-                        )
+                        onSaveExpense(amount, catId, selectedSubCategoryId, notes)
                     }
                 },
                 isLoading = uiState is AddExpenseUiState.Loading,
                 enabled = amount.isNotBlank() && selectedCategoryId != null
             )
         }
+    }
+}
+
+@Preview(name = "Add Expense - Light", showBackground = true, showSystemUi = true)
+@Preview(
+    name = "Add Expense - Dark",
+    showBackground = true,
+    showSystemUi = true,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun AddExpenseScreenPreview() {
+    val now = System.currentTimeMillis()
+    val categories = listOf(
+        Category("food", "preview-user", "Food", "🍽️", 0xFFFF9800.toInt(), true, now, now),
+        Category("travel", "preview-user", "Travel", "✈️", 0xFF2196F3.toInt(), true, now, now),
+        Category("shopping", "preview-user", "Shopping", "🛍️", 0xFFE91E63.toInt(), true, now, now),
+        Category("bills", "preview-user", "Bills", "🧾", 0xFF4CAF50.toInt(), true, now, now),
+        Category("health", "preview-user", "Health", "💊", 0xFF9C27B0.toInt(), true, now, now),
+        Category("other", "preview-user", "Other", "📦", 0xFF607D8B.toInt(), true, now, now)
+    )
+
+    BudgetCalculatorTheme(dynamicColor = false) {
+        AddExpenseContent(
+            expenseId = null,
+            categories = categories,
+            subCategories = emptyList(),
+            uiState = AddExpenseUiState.Idle,
+            onBackPressed = {},
+            onCategorySelected = {},
+            onSaveExpense = { _, _, _, _ -> }
+        )
     }
 }

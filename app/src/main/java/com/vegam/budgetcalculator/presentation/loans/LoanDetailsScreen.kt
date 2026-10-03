@@ -92,7 +92,7 @@ private fun LoanDetailsContent(
     onDeleteTransaction: (String) -> Unit
 ) {
     var showForm by remember { mutableStateOf(false) }
-    val total = transactions.sumOf { it.signedAmountMinor }
+    val total = transactions.filter { it.type != LoanTransactionType.INTEREST }.sumOf { it.signedAmountMinor }
 
     Scaffold(
         topBar = {
