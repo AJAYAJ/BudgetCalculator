@@ -1,5 +1,6 @@
 package com.vegam.budgetcalculator.presentation.backup
 
+import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -102,15 +103,21 @@ class BackupViewModel @Inject constructor(
         _state.value = _state.value.copy(authorizationIntent = null)
     }
 
-    fun authorizationResult(intent: Intent?) {
+    fun authorizationResult(resultCode: Int, intent: Intent?) {
         if (operation == null) {
             _state.value = BackupUiState(message = "Please tap the backup or restore button again.")
             return
         }
         viewModelScope.launch {
             try {
-                val result = authorization.getAuthorizationResultFromIntent(intent)
-                execute(checkNotNull(result.accessToken))
+                if (intent != null) {
+                    val result = authorization.getAuthorizationResultFromIntent(intent)
+                    execute(checkNotNull(result.accessToken))
+                } else if (resultCode == Activity.RESULT_CANCELED) {
+                    cancelAuthorization()
+                } else {
+                    _state.value = BackupUiState(message = "Google Drive authorization failed (code $resultCode).")
+                }
             } catch (e: Exception) {
                 fail(e)
             }
@@ -182,7 +189,15 @@ class BackupViewModel @Inject constructor(
         pendingSnapshot = null
         _state.value = BackupUiState(message = when (e) {
             is kotlinx.serialization.SerializationException -> "The backup could not be read. No local data was changed."
-            is com.google.android.gms.common.api.ApiException -> "Google authorization failed (${e.statusCode}). Check Google Cloud OAuth setup and try again."
+            is com.google.android.gms.common.api.ApiException -> {
+                when (e.statusCode) {
+                    16, 12501 -> "Google Drive connection cancelled. Your data is unchanged."
+                    10 -> "Google Drive setup incomplete (Error 10: DEVELOPER_ERROR).\n\nTo fix this:\n1. Enable 'Google Drive API' in Google Cloud Console.\n2. Create an Android OAuth Client ID for package 'com.vegam.budgetcalculator' with your app's SHA-1 certificate fingerprint.\n3. Add your Google account under 'Test users' in Google Cloud Console if OAuth status is Testing."
+                    12500 -> "Google Sign-In failed (Error 12500). Please ensure Google Play Services is updated and active on this device."
+                    7 -> "Network error. Please check your internet connection and try again."
+                    else -> "Google authorization failed (Error ${e.statusCode}). Please check your Google Cloud Console OAuth setup."
+                }
+            }
             else -> e.message ?: "Backup operation failed. Please try again."
         })
     }

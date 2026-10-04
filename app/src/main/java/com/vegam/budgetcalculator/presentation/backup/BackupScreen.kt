@@ -1,6 +1,5 @@
 package com.vegam.budgetcalculator.presentation.backup
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -24,8 +23,7 @@ fun BackupScreen(onBackPressed: () -> Unit, viewModel: BackupViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var confirmBackup by remember { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) viewModel.authorizationResult(result.data)
-        else viewModel.cancelAuthorization()
+        viewModel.authorizationResult(result.resultCode, result.data)
     }
     LaunchedEffect(state.authorizationIntent) {
         state.authorizationIntent?.let { pendingIntent ->
