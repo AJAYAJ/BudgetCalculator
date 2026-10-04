@@ -32,4 +32,5 @@ abstract class BudgetDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun monthlyBudgetDao(): MonthlyBudgetDao
     abstract fun loanDao(): LoanDao
+    abstract fun backupDao(): com.vegam.budgetcalculator.data.local.dao.BackupDao
 }

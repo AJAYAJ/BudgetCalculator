@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+@kotlinx.serialization.Serializable
 @Entity(
     tableName = "loan_people",
     indices = [Index(value = ["userId", "name"])]

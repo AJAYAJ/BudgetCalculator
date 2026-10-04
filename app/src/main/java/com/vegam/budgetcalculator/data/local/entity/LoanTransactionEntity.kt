@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+@kotlinx.serialization.Serializable
 @Entity(
     tableName = "loan_transactions",
     foreignKeys = [

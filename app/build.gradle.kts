@@ -85,6 +85,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation("com.google.android.gms:play-services-auth:22.0.0")
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

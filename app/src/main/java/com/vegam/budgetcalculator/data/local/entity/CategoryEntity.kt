@@ -3,6 +3,7 @@ package com.vegam.budgetcalculator.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+@kotlinx.serialization.Serializable
 @Entity(tableName = "categories")
 data class CategoryEntity(
     @PrimaryKey val id: String,

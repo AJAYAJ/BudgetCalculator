@@ -21,6 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vegam.budgetcalculator.presentation.MainViewModel
+import com.vegam.budgetcalculator.presentation.backup.BackupScreen
+import com.vegam.budgetcalculator.presentation.backup.BackupViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun MainScreen(
@@ -28,11 +33,28 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
+    val backupViewModel: BackupViewModel = hiltViewModel()
+    val showRestorePrompt by backupViewModel.showRestorePrompt.collectAsStateWithLifecycle()
+    if (showRestorePrompt) {
+        AlertDialog(
+            onDismissRequest = backupViewModel::dismissRestorePrompt,
+            title = { Text("Restore a previous backup?") },
+            text = { Text("If you used BudgetCalculator before, reconnect the same Google Drive account to restore your backup. New users can skip this and back up later from More.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    backupViewModel.dismissRestorePrompt()
+                    navController.navigate("backup") { launchSingleTop = true }
+                }) { Text("Open backup & restore") }
+            },
+            dismissButton = { TextButton(onClick = backupViewModel::dismissRestorePrompt) { Text("Not now") } }
+        )
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val showBottomNavigation = currentDestination?.route !in setOf(
         Screen.Loans.route,
-        Screen.LoanDetails.route
+        Screen.LoanDetails.route,
+        "backup"
     )
 
     val items = listOf(
@@ -126,7 +148,14 @@ fun MainScreen(
                 MoreScreen(
                     onManageCategories = { navController.navigate(Screen.ManageCategories.route) },
                     onLoans = { navController.navigate(Screen.Loans.route) },
+                    onBackup = { navController.navigate("backup") },
                     onLogout = onLogout
+                )
+            }
+            composable("backup") {
+                BackupScreen(
+                    onBackPressed = { navController.popBackStack() },
+                    viewModel = backupViewModel
                 )
             }
             composable(Screen.Loans.route) {
@@ -154,10 +183,11 @@ fun MainScreen(
 private fun MoreScreen(
     onManageCategories: () -> Unit,
     onLoans: () -> Unit,
+    onBackup: () -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.Start
     ) {
@@ -175,6 +205,14 @@ private fun MoreScreen(
                 headlineContent = { Text("Loans") },
                 supportingContent = { Text("Track money given, returned and interest by person") },
                 leadingContent = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null) },
+                trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) }
+            )
+        }
+        Card(onClick = onBackup, modifier = Modifier.fillMaxWidth()) {
+            ListItem(
+                headlineContent = { Text("Backup & restore") },
+                supportingContent = { Text("Save to Google Drive and restore after reinstalling") },
+                leadingContent = { Icon(Icons.Default.CloudUpload, contentDescription = null) },
                 trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null) }
             )
         }
